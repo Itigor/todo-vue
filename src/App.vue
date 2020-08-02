@@ -1,18 +1,29 @@
 <template>
   <div id="app">
-    <form v-if="isVisible" @submit.prevent="submit">
-      <input type="text" name="change_todo" :value="this.chengeTitle" />
-      <input type="text" placeholder="Edit this todo" v-model="title" />
-
-      <button type="submit">Edit</button>
-    </form>
-
-    <TodoForm />
-
     <hr />
     <table>
       <caption>
-        <h1>Todo Lists (active {{todosCount}} todos)</h1>
+        <EditTodoForm
+          :isVisibleEditForm="isVisibleEditForm"
+          @submit="exitEditTodo"
+          :chengeTitle="chengeTitle"
+          :id="id"
+          :dat="dat"
+        />
+
+        <DescriptionTodoForm
+          :isVisibleDescriptionForm="isVisibleDescriptionForm"
+          @reset="exitDescriptionTodo"
+          :chengeTitle="chengeTitle"
+          :id="id"
+          :dat="dat"
+          :desc="description"
+        />
+
+        <CreateTodoForm :isVisibleCreateForm="isVisibleCreateForm" @submit="exitCreateTodo" />
+
+        <h2>Todo Lists (active {{todosCount}} todos)</h2>
+        <button @click="createTodo">Create Todo</button>
       </caption>
       <tr>
         <th>ID</th>
@@ -22,17 +33,17 @@
       </tr>
       <tr class="todo" v-for="todo in paginatedUsers" :key="todo.id">
         <td class="id">{{todo.id}}</td>
-        <td class="title">{{todo.title}}</td>
+        <td
+          class="title"
+          @click="DescriptionTodo(todo.title, todo.id, todo.dat, todo.desc)"
+        >{{todo.title}}</td>
         <td class="date">{{todo.dat}}</td>
         <td class="button">
-          <button
-            type="button"
-            @click="Edit_todo(todo.title, todo.id, todo.dat)"
-            value="todo.title"
-          >Edit</button>
+          <button type="button" @click="Edit_todo(todo.title, todo.id, todo.dat,  todo.desc)">Edit</button>
         </td>
       </tr>
     </table>
+
     <Paginate
       :page-count="pages"
       :click-handler="pageClick"
@@ -48,25 +59,39 @@
 
 
 <script>
-import { mapGetters, mapActions, mapMutations } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
-import TodoForm from "./components/TodoForm";
+import CreateTodoForm from "./components/CreateTodoForm";
+import EditTodoForm from "./components/EditTodoForm";
+import DescriptionTodoForm from "./components/DescriptionTodoForm";
 
 export default {
   name: "app",
+
+  components: {
+    CreateTodoForm,
+    EditTodoForm,
+    DescriptionTodoForm,
+    // TodoList
+  },
+
   data() {
     return {
       usersPerPage: 10,
       pageCount: 1,
-      isVisible: false,
+      isVisibleEditForm: false,
+      isVisibleCreateForm: false,
+      isVisibleDescriptionForm: false,
       chengeTitle: "",
       id: 0,
       title: "",
+      dat: 0,
+      description: "",
     };
   },
 
   computed: {
-    ...mapGetters(["validTodos", "todosCount", "getState"]),
+    ...mapGetters(["validTodos", "todosCount"]),
     pages() {
       return Math.ceil(this.validTodos.length / 10);
     },
@@ -85,32 +110,35 @@ export default {
     pageClick(pages) {
       this.pageCount = pages;
     },
+    createTodo() {
+      this.isVisibleCreateForm = true;
+    },
+    exitCreateTodo(data) {
+      this.isVisibleCreateForm = data;
+    },
+    exitEditTodo(data) {
+      this.isVisibleEditForm = data;
+    },
+    exitDescriptionTodo(data) {
+      this.isVisibleDescriptionForm = data;
+    },
     //ddddd
     Edit_todo(todo, id, dat) {
-      this.isVisible = true;
+      this.isVisibleEditForm = true;
       this.chengeTitle = todo;
       this.id = id;
       this.dat = dat;
     },
-
-    ...mapMutations(["editTodo"]),
-    submit() {
-      this.editTodo({
-        title: this.title,
-        id: this.id,
-        dat: this.dat,
-      });
-      this.title = "";
-      this.isVisible = false;
+    DescriptionTodo(todo, id, dat, description) {
+      this.isVisibleDescriptionForm = true;
+      this.chengeTitle = todo;
+      this.id = id;
+      this.dat = dat;
+      this.description = description;
     },
   },
   async mounted() {
     this.fetchTodos();
-  },
-
-  components: {
-    TodoForm,
-    // TodoList
   },
 };
 </script>
@@ -121,17 +149,23 @@ export default {
   padding: 0;
   text-align: center;
 }
+button {
+  padding: 5px;
+  margin-bottom: 1rem;
+}
 table {
   color: white;
   background-color: black;
-  width: 100%;
+  width: 80%;
   margin: auto;
   padding: 0;
-  td:first-child {
-    width: 10%;
+  td:first-child,
+  td:last-child {
+    width: 15%;
   }
-  th:first-child {
-    width: 10%;
+  th:first-child,
+  th:last-child {
+    width: 15%;
   }
 }
 tr {

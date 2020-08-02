@@ -11,6 +11,8 @@ Vue.config.productionTip = false
 Vue.component('Paginate', Paginate)
 
 
+
+
 new Vue({
   router,
   store,
